@@ -1,0 +1,45 @@
+name: Documentation Impact
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: doc-impact-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  impact:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Build checklist
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          LINK: ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 .github/scripts/impact.py --base "$BASE" --link-base "$LINK" > "$RUNNER_TEMP/impact.md"
+          cat "$RUNNER_TEMP/impact.md" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        with:
+          script: |
+            const fs = require('node:fs');
+            const marker = '<!-- demo-doc-impact -->';
+            const report = fs.readFileSync(`${process.env.RUNNER_TEMP}/impact.md`, 'utf8');
+            const body = `${marker}\n${report}\n[Copilot follow-up skill](${context.payload.repository.html_url}/blob/main/.github/skills/doc-impact-update/SKILL.md)`;
+            const issue = { ...context.repo, issue_number: context.issue.number };
+            const comments = await github.paginate(github.rest.issues.listComments, issue);
+            const old = comments.find(c => c.user.login === 'github-actions[bot]' && c.body.startsWith(marker));
+            if (old) {
+              await github.rest.issues.updateComment({ ...context.repo, comment_id: old.id, body });
+            } else {
+              await github.rest.issues.createComment({ ...issue, body });
+            }
