@@ -2,4 +2,4 @@
 
 ## Advance bookings
 
-The dome reservation window opens 14 days before a scheduled session.
+The dome reservation window opens 10 days before a scheduled session.
