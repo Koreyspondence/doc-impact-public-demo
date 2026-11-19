@@ -2,4 +2,4 @@
 
 ## Check a booking
 
-For the dome reservation window, accept requests beginning 14 days before the session.
+For the dome reservation window, accept requests beginning 7 days before the session.

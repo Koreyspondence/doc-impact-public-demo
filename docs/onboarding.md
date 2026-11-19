@@ -2,4 +2,4 @@
 
 ## Booking questions
 
-Tell visitors the dome reservation window opens 14 days before their session.
+Tell visitors the dome reservation window opens 7 days before their session.
